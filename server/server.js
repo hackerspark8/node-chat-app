@@ -8,16 +8,42 @@ const port = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
-io.on("connection", socket => {
-  console.log("Welcome onboard");
-  socket.on("createMessage", ({ from, text }) => {
-    io.emit("newMessage", {
+
+handleConnection(io, socket => {
+  emitNewMessage(socket, {
+    from: "admin",
+    text: "Welcome!",
+    createdAt: new Date().getTime()
+  });
+  emitNewMessage(socket.broadcast, {
+    from: "admin",
+    text: "New User Connected!"
+  });
+  handleCreateMessage(socket, ({ from, text }) => {
+    emitNewMessage(socket.broadcast, {
       from,
-      text,
-      createdAt: new Date().getTime()
+      text
     });
   });
-  socket.on("disconnect", () => console.log("Bye!"));
+  handleDisconnect(socket, () => console.log("Bye!"));
 });
+
 app.use(express.static(publicPath));
 server.listen(port, () => console.log(`Server is up on port ${port}`));
+
+function emitNewMessage(channel, message) {
+  message.createdAt = new Date().getTime();
+  channel.emit("newMessage", message);
+}
+
+function handleCreateMessage(channel, handler) {
+  channel.on("createMessage", handler);
+}
+
+function handleDisconnect(channel, handler) {
+  channel.on("disconnect", handler);
+}
+
+function handleConnection(channel, handler) {
+  channel.on("connection", handler);
+}
