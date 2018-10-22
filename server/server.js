@@ -10,7 +10,14 @@ const server = http.createServer(app);
 const io = socketIO(server);
 io.on("connection", socket => {
   console.log("Welcome onboard");
+  socket.on("createMessage", message => console.log(message));
   socket.on("disconnect", () => console.log("Bye!"));
+
+  socket.emit("newMessage", {
+    from: "Sowmya",
+    text: "Hi",
+    createdAt: new Date().getTime()
+  });
 });
 app.use(express.static(publicPath));
 server.listen(port, () => console.log(`Server is up on port ${port}`));
