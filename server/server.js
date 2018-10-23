@@ -17,10 +17,11 @@ io.on("connection", socket => {
     "newMessage",
     generateMessage("admin", "New User Connected!")
   );
-  socket.on("createMessage", ({ from, text }) => {
-    socket.broadcast.emit("newMessage", generateMessage(from, text));
+  socket.on("createMessage", ({ from, text }, callback) => {
+    callback(true);
+    io.emit("newMessage", generateMessage(from, text));
   });
-  socket.on("disconnect", () => console.log("Bye!"));
+  socket.on("disconnect", message => console.log("Bye!"));
 });
 
 app.use(express.static(publicPath));
