@@ -9,41 +9,19 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-handleConnection(io, socket => {
-  emitNewMessage(socket, {
-    from: "admin",
-    text: "Welcome!",
-    createdAt: new Date().getTime()
+const { generateMessage } = require("./utils/message");
+
+io.on("connection", socket => {
+  socket.emit("newMessage", generateMessage("admin", "Welcome!"));
+  socket.broadcast.emit(
+    "newMessage",
+    generateMessage("admin", "New User Connected!")
+  );
+  socket.on("createMessage", ({ from, text }) => {
+    socket.broadcast.emit("newMessage", generateMessage(from, text));
   });
-  emitNewMessage(socket.broadcast, {
-    from: "admin",
-    text: "New User Connected!"
-  });
-  handleCreateMessage(socket, ({ from, text }) => {
-    emitNewMessage(socket.broadcast, {
-      from,
-      text
-    });
-  });
-  handleDisconnect(socket, () => console.log("Bye!"));
+  socket.on("disconnect", () => console.log("Bye!"));
 });
 
 app.use(express.static(publicPath));
 server.listen(port, () => console.log(`Server is up on port ${port}`));
-
-function emitNewMessage(channel, message) {
-  message.createdAt = new Date().getTime();
-  channel.emit("newMessage", message);
-}
-
-function handleCreateMessage(channel, handler) {
-  channel.on("createMessage", handler);
-}
-
-function handleDisconnect(channel, handler) {
-  channel.on("disconnect", handler);
-}
-
-function handleConnection(channel, handler) {
-  channel.on("connection", handler);
-}
