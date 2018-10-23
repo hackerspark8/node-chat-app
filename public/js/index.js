@@ -21,4 +21,7 @@ $("#message-form").on("submit", function(e) {
     },
     ack => console.log(ack)
   );
+  $(this)
+    .find("input")
+    .val("");
 });
