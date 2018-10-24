@@ -7,6 +7,14 @@ socket.on("newMessage", ({ from, text }) => {
   li.text(`${from}: ${text}`);
   $("#messages").append(li);
 });
+socket.on("newLocationMessage", message => {
+  const li = $("<li></li>");
+  const a = $("<a target='_blank'>My Current Location</a>");
+  li.text(`${message.from}: `);
+  a.attr("href", message.url);
+  li.append(a);
+  $("#messages").append(li);
+});
 socket.on("disconnect", () => console.log("Disconnected!"));
 
 $("#message-form").on("submit", function(e) {
