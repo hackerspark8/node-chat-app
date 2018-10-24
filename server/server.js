@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const { generateMessage } = require("./utils/message");
+const { generateMessage, generateLocationMessage } = require("./utils/message");
 
 io.on("connection", socket => {
   socket.emit("newMessage", generateMessage("admin", "Welcome!"));
@@ -17,11 +17,20 @@ io.on("connection", socket => {
     "newMessage",
     generateMessage("admin", "New User Connected!")
   );
+
   socket.on("createMessage", ({ from, text }, callback) => {
     callback(true);
     io.emit("newMessage", generateMessage(from, text));
   });
-  socket.on("disconnect", message => console.log("Bye!"));
+  socket.on("createLocationMessage", ({ latitude, longitude }, callback) => {
+    callback("Called");
+    io.emit(
+      "newLocationMessage",
+      generateLocationMessage("admin", latitude, longitude)
+    );
+  });
+
+  socket.on("disconnect", () => console.log("Bye!"));
 });
 
 app.use(express.static(publicPath));
