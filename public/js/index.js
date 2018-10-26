@@ -24,7 +24,7 @@ $("#message-form").on("submit", function(e) {
     "createMessage",
     {
       from: "User",
-      text: $textField.val()
+      text: textField.val()
     },
     ack => textField.val("")
   );
