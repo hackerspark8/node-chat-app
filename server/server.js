@@ -19,11 +19,11 @@ io.on("connection", socket => {
   );
 
   socket.on("createMessage", ({ from, text }, callback) => {
-    callback(true);
+    callback();
     io.emit("newMessage", generateMessage(from, text));
   });
   socket.on("createLocationMessage", ({ latitude, longitude }, callback) => {
-    callback("Called");
+    callback();
     io.emit(
       "newLocationMessage",
       generateLocationMessage("admin", latitude, longitude)
