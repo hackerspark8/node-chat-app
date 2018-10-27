@@ -38,6 +38,14 @@ socket.on("newLocationMessage", ({ from, url, createdAt }) => {
 
 socket.on("disconnect", () => console.log("Disconnected!"));
 
+socket.on("updateUserList", users => {
+  const ol = $("<ol></ol>");
+  users.forEach(user => {
+    ol.append($("<li></li>").text(user));
+  });
+  $("#users").html(ol);
+});
+
 $("#message-form").on("submit", function(e) {
   const textField = $(this).find("input");
   e.preventDefault();

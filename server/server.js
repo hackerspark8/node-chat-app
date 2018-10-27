@@ -5,12 +5,14 @@ const socketIO = require("socket.io");
 
 const { generateMessage, generateLocationMessage } = require("./utils/message");
 const { isRealString } = require("./utils/validation");
+const { Users } = require("./utils/users");
 
 const publicPath = path.join(__dirname, "../public");
 const port = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
+const users = new Users();
 
 io.on("connection", socket => {
   socket.on("join", ({ name, room }, callback) => {
@@ -19,6 +21,10 @@ io.on("connection", socket => {
       return;
     }
     socket.join(room);
+    users.removeUser(socket.id);
+    users.addUser(socket.id, name, room);
+    io.to(room).emit("updateUserList", users.getUserList(room));
+
     socket.emit("newMessage", generateMessage("Admin", "Welcome!"));
     socket.broadcast
       .to(room)
@@ -38,7 +44,16 @@ io.on("connection", socket => {
     );
   });
 
-  socket.on("disconnect", () => console.log("Bye!"));
+  socket.on("disconnect", () => {
+    const user = users.removeUser(socket.id);
+    if (user) {
+      io.to(user.room).emit("updateUserList", users.getUserList(user.room));
+      io.to(user.room).emit(
+        "newMessage",
+        generateMessage("Admin", `${user.name} Disconnected!`)
+      );
+    }
+  });
 });
 
 app.use(express.static(publicPath));
