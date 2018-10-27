@@ -1,20 +1,33 @@
 const socket = io();
+
 socket.on("connect", () => {
   console.log("Connected!");
 });
-socket.on("newMessage", ({ from, text }) => {
-  const li = $("<li></li>");
-  li.text(`${from}: ${text}`);
-  $("#messages").append(li);
+
+socket.on("newMessage", ({ from, text, createdAt }) => {
+  const formattedTime = moment(createdAt).format("h:mm a");
+  const message = $("#message-template").html();
+  const html = Mustache.render(message, {
+    from,
+    text,
+    formattedTime
+  });
+  $("#messages").append(html);
+  scrollToBottom();
 });
-socket.on("newLocationMessage", message => {
-  const li = $("<li></li>");
-  const a = $("<a target='_blank'>My Current Location</a>");
-  li.text(`${message.from}: `);
-  a.attr("href", message.url);
-  li.append(a);
-  $("#messages").append(li);
+
+socket.on("newLocationMessage", ({ from, url, createdAt }) => {
+  const formattedTime = moment(createdAt).format("h:mm a");
+  const locationMessage = $("#location-message-template").html();
+  const html = Mustache.render(locationMessage, {
+    from,
+    url,
+    formattedTime
+  });
+  $("#messages").append(html);
+  scrollToBottom();
 });
+
 socket.on("disconnect", () => console.log("Disconnected!"));
 
 $("#message-form").on("submit", function(e) {
@@ -53,3 +66,20 @@ locationButton.on("click", function() {
     }
   );
 });
+
+const scrollToBottom = () => {
+  const messages = $("#messages");
+  const newMessage = messages.children("li:last-child");
+
+  const clientHeight = messages.prop("clientHeight");
+  const scrollTop = messages.prop("scrollTop");
+  const scrollHeight = messages.prop("scrollHeight");
+  const newMessageHeight = newMessage.innerHeight();
+  const lastMessageHeight = newMessage.prev().innerHeight();
+  if (
+    clientHeight + scrollTop + newMessageHeight + lastMessageHeight >=
+    scrollHeight
+  ) {
+    messages.scrollTop(scrollHeight);
+  }
+};
