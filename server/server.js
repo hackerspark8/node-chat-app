@@ -3,20 +3,28 @@ const http = require("http");
 const express = require("express");
 const socketIO = require("socket.io");
 
+const { generateMessage, generateLocationMessage } = require("./utils/message");
+const { isRealString } = require("./utils/validation");
+
 const publicPath = path.join(__dirname, "../public");
 const port = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const { generateMessage, generateLocationMessage } = require("./utils/message");
-
 io.on("connection", socket => {
-  socket.emit("newMessage", generateMessage("admin", "Welcome!"));
-  socket.broadcast.emit(
-    "newMessage",
-    generateMessage("admin", "New User Connected!")
-  );
+  socket.on("join", ({ name, room }, callback) => {
+    if (!isRealString(name) || !isRealString(room)) {
+      callback("Name and room name are required");
+      return;
+    }
+    socket.join(room);
+    socket.emit("newMessage", generateMessage("Admin", "Welcome!"));
+    socket.broadcast
+      .to(room)
+      .emit("newMessage", generateMessage("Admin", `${name} Connected!`));
+    callback();
+  });
 
   socket.on("createMessage", ({ from, text }, callback) => {
     callback();
@@ -26,7 +34,7 @@ io.on("connection", socket => {
     callback();
     io.emit(
       "newLocationMessage",
-      generateLocationMessage("admin", latitude, longitude)
+      generateLocationMessage("Admin", latitude, longitude)
     );
   });
 
